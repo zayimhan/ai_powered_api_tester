@@ -1,0 +1,55 @@
+:host {
+    display: block;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.col-list {
+    padding: 6px;
+}
+
+.col-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: left;
+    transition: background var(--transition), color var(--transition);
+}
+
+.col-item:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.col-item.selected {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.col-item svg {
+    flex-shrink: 0;
+    color: var(--text-dim);
+}
+
+.empty-state {
+    padding: 32px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 12px;
+    text-align: center;
+}
+
+.empty-state svg {
+    opacity: .35;
+}

@@ -1,0 +1,152 @@
+<div class="builder" [class.history-collapsed]="!historyOpen">
+    <!-- History Sidebar -->
+    <div class="history-sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+                History
+            </span>
+            <button class="sidebar-toggle" (click)="toggleHistory()" title="Collapse">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+            </button>
+        </div>
+        <div class="sidebar-items">
+            <div *ngFor="let item of history" class="history-card" (click)="loadHistoryItem(item)"
+                [title]="item.url || ''">
+                <div class="history-card-top">
+                    <span class="history-method"
+                        [ngClass]="'method-' + (item.method || 'get').toLowerCase()">{{item.method || 'GET'}}</span>
+                    <span class="history-status"
+                        [ngClass]="'status-' + ((item.status_code || 0) / 100 | number:'1.0-0') + 'xx'">
+                        {{item.status_code}}
+                    </span>
+                    <button class="delete-history-btn" (click)="deleteHistoryItem(item, $event)" title="Delete from history">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="history-card-url">{{truncateUrl(item.url)}}</div>
+                <div class="history-card-meta">
+                    <span class="history-time">{{getRelativeTime(item.executed_at)}}</span>
+                    <span class="history-duration" *ngIf="item.response_time_ms">{{item.response_time_ms}}ms</span>
+                </div>
+            </div>
+            <div *ngIf="history.length === 0" class="sidebar-empty">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                    opacity="0.25">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+                <p>No history yet</p>
+                <small>Send a request to see it here</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collapsed sidebar toggle -->
+    <button *ngIf="!historyOpen" class="sidebar-expand" (click)="toggleHistory()" title="Show History">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+        </svg>
+    </button>
+
+    <!-- Main Area -->
+    <div class="main-area">
+        <!-- Request Form -->
+        <div class="request-area">
+            <app-request-form [loadRequest]="loadedRequest" (send)="handleSend($event)"
+                (save)="handleSave($event)"></app-request-form>
+        </div>
+
+        <!-- Tabs + Response Split -->
+        <div class="panels">
+            <!-- Left: Tabs -->
+            <div class="panel-left">
+                <div class="tab-strip">
+                    <button [class.active]="activeTab === 'auth'" (click)="activeTab = 'auth'">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0110 0v4" />
+                        </svg>
+                        Auth
+                    </button>
+                    <button [class.active]="activeTab === 'headers'" (click)="activeTab = 'headers'">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 7h16M4 12h16M4 17h10" />
+                        </svg>
+                        Headers
+                    </button>
+                    <button [class.active]="activeTab === 'params'" (click)="activeTab = 'params'">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        Params
+                    </button>
+                    <button [class.active]="activeTab === 'body'" (click)="activeTab = 'body'">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        Body
+                    </button>
+                </div>
+                <div class="tab-panels">
+                    <div class="tab-panel" [class.active]="activeTab === 'auth'">
+                        <app-authorization-editor></app-authorization-editor>
+                    </div>
+                    <div class="tab-panel" [class.active]="activeTab === 'headers'">
+                        <app-header-editor></app-header-editor>
+                    </div>
+                    <div class="tab-panel" [class.active]="activeTab === 'params'">
+                        <app-query-param-editor></app-query-param-editor>
+                    </div>
+                    <div class="tab-panel" [class.active]="activeTab === 'body'">
+                        <app-body-editor></app-body-editor>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Response -->
+            <div class="panel-right">
+                <div class="response-header">
+                    <span class="response-title">Response</span>
+                    <span *ngIf="response" class="response-meta">
+                        <span class="status-badge"
+                            [ngClass]="'status-' + ((response.status_code || 0) / 100 | number:'1.0-0') + 'xx'">
+                            {{response.status_code}}
+                        </span>
+                        <span class="response-time" *ngIf="response.response_time_ms">
+                            {{response.response_time_ms}}ms
+                        </span>
+                    </span>
+                </div>
+                <div class="response-body">
+                    <app-response-viewer [response]="response"></app-response-viewer>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" *ngIf="isLoading">
+        <div class="loading-spinner"></div>
+        <span>Sending request...</span>
+    </div>
+
+    <!-- Save Modal -->
+    <app-save-request-modal *ngIf="showSaveModal" [initialTitle]="saveModalData?.title" (save)="onModalSave($event)"
+        (close)="onModalClose()"></app-save-request-modal>
+</div>

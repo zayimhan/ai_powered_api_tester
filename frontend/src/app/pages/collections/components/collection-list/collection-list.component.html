@@ -1,0 +1,15 @@
+<div class="col-list">
+    <button *ngFor="let c of collections" class="col-item" [class.selected]="selected === c" (click)="select(c)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+        </svg>
+        <span>{{ c.name }}</span>
+    </button>
+
+    <div class="empty-state" *ngIf="!collections || collections.length === 0">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+        </svg>
+        <p>No collections yet</p>
+    </div>
+</div>

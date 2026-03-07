@@ -1,0 +1,14 @@
+<div class="req-list">
+    <button *ngFor="let r of requests" class="req-item" [class.selected]="selected === r" (click)="select(r)">
+        <span class="req-method" [ngClass]="'method-' + r.method?.toLowerCase()">{{ r.method }}</span>
+        <span class="req-name">{{ r.name }}</span>
+    </button>
+
+    <div class="empty-state" *ngIf="!requests || requests.length === 0">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+        </svg>
+        <p>Select a collection</p>
+    </div>
+</div>

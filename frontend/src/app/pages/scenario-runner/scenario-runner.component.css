@@ -1,0 +1,45 @@
+:host {
+    display: block;
+    height: calc(100vh - 44px);
+}
+
+.scenario-page {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scenario-lock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    max-width: 340px;
+}
+
+.lock-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+
+.scenario-lock h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.scenario-lock p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+}

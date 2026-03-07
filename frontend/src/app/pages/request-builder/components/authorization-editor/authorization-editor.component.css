@@ -1,0 +1,65 @@
+.auth-editor {
+    padding: 1rem;
+}
+
+.auth-type-selector {
+    margin-bottom: 1.5rem;
+    max-width: 300px;
+}
+
+.auth-type-selector label {
+    display: block;
+    font-size: 0.75rem;
+    color: #8b949e;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auth-type-selector select {
+    width: 100%;
+    background: #1a1e24;
+    border: 1px solid #30363d;
+    color: #c9d1d9;
+    padding: 0.5rem;
+    border-radius: 6px;
+    outline: none;
+}
+
+.auth-config {
+    margin-top: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.token-input {
+    width: 100%;
+    min-height: 100px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    color: #79c0ff;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    padding: 0.8rem;
+    border-radius: 6px;
+    resize: vertical;
+    outline: none;
+}
+
+.token-input:focus {
+    border-color: #2f81f7;
+}
+
+.helper-text {
+    font-size: 0.8rem;
+    color: #8b949e;
+    margin-top: 0.8rem;
+}
+
+.empty-state {
+    color: #8b949e;
+    font-size: 0.9rem;
+    padding: 2rem 0;
+}

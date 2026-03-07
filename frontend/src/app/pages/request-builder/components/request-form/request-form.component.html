@@ -1,0 +1,31 @@
+<div class="request-form">
+    <div class="form-main">
+        <select [(ngModel)]="method" class="inp method-select" [ngClass]="'method-' + method.toLowerCase()">
+            <option>GET</option>
+            <option>POST</option>
+            <option>PUT</option>
+            <option>PATCH</option>
+            <option>DELETE</option>
+        </select>
+        <input [(ngModel)]="url" class="inp url-input" placeholder="Enter request URL..."
+            (keydown.enter)="onSend()" />
+        <button (click)="onSend()" class="btn btn-primary send-btn" [disabled]="!url">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+            Send
+        </button>
+    </div>
+    <div class="form-secondary">
+        <input [(ngModel)]="title" class="inp title-input" placeholder="Request name (optional)" />
+        <button (click)="onSave()" class="btn btn-ghost save-btn" [disabled]="!url" title="Save to collection">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+            </svg>
+            Save
+        </button>
+    </div>
+</div>

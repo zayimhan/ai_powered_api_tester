@@ -1,0 +1,21 @@
+<div class="detail-panel" *ngIf="request">
+    <div class="detail-header">
+        <h3 class="detail-name">{{ request.name }}</h3>
+        <div class="detail-meta">
+            <span class="status-badge" [ngClass]="'method-' + request.method?.toLowerCase()">{{ request.method }}</span>
+            <span class="detail-url">{{ request.url }}</span>
+        </div>
+    </div>
+    <div class="detail-body">
+        <div class="section-label">Body</div>
+        <pre class="detail-pre">{{ request.body | json }}</pre>
+    </div>
+</div>
+
+<div class="empty-state" *ngIf="!request">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+    </svg>
+    <p>Select a request to view details</p>
+</div>

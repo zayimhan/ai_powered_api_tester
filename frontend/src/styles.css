@@ -1,0 +1,339 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─────────────────────────────────────────────
+   Design Tokens
+───────────────────────────────────────────── */
+:root {
+    --bg: #0e1117;
+    --surface: #161b22;
+    --surface-2: #1c2330;
+    --border: #30363d;
+    --border-light: #21262d;
+
+    --text: #e6edf3;
+    --text-muted: #7d8590;
+    --text-dim: #484f58;
+
+    --accent: #2f81f7;
+    --accent-dim: #1a4a8a;
+    --accent-hover: #58a6ff;
+
+    --green: #3fb950;
+    --red: #f85149;
+    --orange: #f0883e;
+    --purple: #a371f7;
+    --cyan: #39d0d8;
+
+    --radius-sm: 4px;
+    --radius: 6px;
+    --radius-lg: 10px;
+
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+    --transition: 150ms ease;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, .5);
+}
+
+/* ─────────────────────────────────────────────
+   Reset
+───────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    height: 100%;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--accent-hover);
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: var(--font-sans);
+    font-size: 13px;
+}
+
+/* ─────────────────────────────────────────────
+   Scrollbar
+───────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-dim);
+}
+
+/* ─────────────────────────────────────────────
+   Shared Inputs
+───────────────────────────────────────────── */
+.inp {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 6px 10px;
+    outline: none;
+    transition: border-color var(--transition);
+    width: 100%;
+}
+
+.inp:focus {
+    border-color: var(--accent);
+}
+
+.inp::placeholder {
+    color: var(--text-dim);
+}
+
+select.inp {
+    cursor: pointer;
+    padding-right: 28px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237d8590'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+textarea.inp {
+    resize: vertical;
+    min-height: 140px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+/* ─────────────────────────────────────────────
+   Shared Buttons
+───────────────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background var(--transition), border-color var(--transition), opacity var(--transition);
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--border);
+}
+
+.btn-ghost:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+.btn-danger {
+    background: transparent;
+    color: var(--red);
+    border-color: transparent;
+}
+
+.btn-danger:hover {
+    background: rgba(248, 81, 73, .12);
+}
+
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+/* ─────────────────────────────────────────────
+   Method badge colours
+───────────────────────────────────────────── */
+.method-get {
+    color: var(--green);
+}
+
+.method-post {
+    color: var(--accent);
+}
+
+.method-put {
+    color: var(--orange);
+}
+
+.method-patch {
+    color: var(--purple);
+}
+
+.method-delete {
+    color: var(--red);
+}
+
+/* ─────────────────────────────────────────────
+   Status badge
+───────────────────────────────────────────── */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+}
+
+.status-2xx {
+    background: rgba(63, 185, 80, .15);
+    color: var(--green);
+}
+
+.status-3xx {
+    background: rgba(240, 136, 62, .15);
+    color: var(--orange);
+}
+
+.status-4xx {
+    background: rgba(248, 81, 73, .15);
+    color: var(--red);
+}
+
+.status-5xx {
+    background: rgba(248, 81, 73, .15);
+    color: var(--red);
+}
+
+/* ─────────────────────────────────────────────
+   App shell
+───────────────────────────────────────────── */
+.app-root {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* ─────────────────────────────────────────────
+   Tab strip (reusable)
+───────────────────────────────────────────── */
+.tab-strip {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    gap: 2px;
+    padding: 0 16px;
+    background: var(--surface);
+}
+
+.tab-strip button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color var(--transition), border-color var(--transition);
+}
+
+.tab-strip button.active,
+.tab-strip button:hover {
+    color: var(--text);
+}
+
+.tab-strip button.active {
+    border-bottom-color: var(--accent);
+}
+
+/* ─────────────────────────────────────────────
+   KV row (key-value pair editor)
+───────────────────────────────────────────── */
+.kv-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 6px;
+    align-items: center;
+}
+
+/* ─────────────────────────────────────────────
+   Section header
+───────────────────────────────────────────── */
+.section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+}
+
+/* ─────────────────────────────────────────────
+   Empty state
+───────────────────────────────────────────── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.empty-state svg {
+    opacity: .35;
+}
+
+.empty-state p {
+    font-size: 13px;
+    line-height: 1.5;
+}

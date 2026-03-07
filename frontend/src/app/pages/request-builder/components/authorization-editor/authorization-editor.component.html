@@ -1,0 +1,55 @@
+<div class="auth-editor">
+    <div class="auth-type-selector">
+        <label>Auth Type</label>
+        <select [(ngModel)]="authType">
+            <option value="none">No Auth</option>
+            <option value="bearer">Bearer Token</option>
+            <option value="basic">Basic Auth</option>
+            <option value="apikey">API Key</option>
+        </select>
+    </div>
+
+    <!-- Bearer Token -->
+    <div class="auth-config" *ngIf="authType === 'bearer'">
+        <div class="form-group">
+            <label>Token</label>
+            <textarea [(ngModel)]="bearerToken" placeholder="Enter token here..." class="token-input"></textarea>
+            <p class="helper-text">The authorization header will be automatically generated.</p>
+        </div>
+    </div>
+
+    <!-- Basic Auth -->
+    <div class="auth-config" *ngIf="authType === 'basic'">
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" [(ngModel)]="basicUsername" placeholder="Username" class="inp">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" [(ngModel)]="basicPassword" placeholder="Password" class="inp">
+        </div>
+    </div>
+
+    <!-- API Key -->
+    <div class="auth-config" *ngIf="authType === 'apikey'">
+        <div class="form-group">
+            <label>Key</label>
+            <input type="text" [(ngModel)]="apiKey" placeholder="Key" class="inp">
+        </div>
+        <div class="form-group">
+            <label>Value</label>
+            <input type="text" [(ngModel)]="apiKeyValue" placeholder="Value" class="inp">
+        </div>
+        <div class="form-group">
+            <label>Add to</label>
+            <select [(ngModel)]="apiKeyAddTo" class="inp">
+                <option value="header">Header</option>
+                <option value="query">Query Params</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="empty-state" *ngIf="authType === 'none'">
+        <p>This request does not use any authorization.</p>
+    </div>
+</div>

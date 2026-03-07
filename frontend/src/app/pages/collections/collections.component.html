@@ -1,0 +1,202 @@
+<div class="collections-page">
+    <!-- Left: Collection List -->
+    <div class="col-sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                </svg>
+                Collections
+            </span>
+            <button class="btn btn-ghost btn-sm" (click)="showNewCollection = !showNewCollection">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                New
+            </button>
+        </div>
+
+        <!-- New collection input -->
+        <div class="new-collection" *ngIf="showNewCollection">
+            <input class="inp" [(ngModel)]="newCollectionName" placeholder="Collection name..."
+                (keydown.enter)="createCollection()" autofocus />
+            <div class="new-collection-actions">
+                <button class="btn btn-primary btn-sm" (click)="createCollection()"
+                    [disabled]="!newCollectionName.trim()">Create</button>
+                <button class="btn btn-ghost btn-sm" (click)="showNewCollection = false">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Collection items -->
+        <div class="collection-items">
+            <div *ngFor="let col of collections" class="collection-item"
+                [class.active]="selectedCollection?.id === col.id" (click)="selectCollection(col)">
+                <div class="collection-item-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8">
+                        <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                    </svg>
+                    <span class="collection-name">{{col.name}}</span>
+                </div>
+                <button class="delete-btn" (click)="deleteCollection(col); $event.stopPropagation()" title="Delete">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-2 14H7L5 6" />
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                    </svg>
+                </button>
+            </div>
+
+            <div *ngIf="collections.length === 0" class="sidebar-empty">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+                    opacity="0.3">
+                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+                </svg>
+                <p>No collections yet</p>
+                <small>Click "+ New" to create one</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Content Area -->
+    <div class="col-content">
+        <!-- No collection selected -->
+        <div class="content-empty" *ngIf="!selectedCollection">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                opacity="0.2">
+                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+            </svg>
+            <h3>Select a Collection</h3>
+            <p>Choose a collection from the sidebar to view its saved requests</p>
+        </div>
+
+        <!-- Collection selected: show requests -->
+        <div class="content-main" *ngIf="selectedCollection">
+            <!-- Collection header -->
+            <div class="content-header">
+                <div class="content-header-left">
+                    <h2 class="collection-title">{{selectedCollection.name}}</h2>
+                    <span class="request-count">{{requests.length}} request{{requests.length !== 1 ? 's' : ''}}</span>
+                </div>
+            </div>
+
+            <!-- Request cards grid -->
+            <div class="requests-grid" *ngIf="requests.length > 0">
+                <div *ngFor="let req of requests" class="request-card"
+                    [class.active]="selectedRequest?.id === req.id" (click)="selectRequest(req)">
+                    <div class="request-card-header">
+                        <span class="request-method"
+                            [ngClass]="'method-' + (req.method || 'get').toLowerCase()">{{req.method || 'GET'}}</span>
+                        <button class="delete-btn" (click)="deleteRequest(req); $event.stopPropagation()"
+                            title="Delete request">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="request-card-title">{{req.title || req.name || 'Untitled'}}</div>
+                    <div class="request-card-url">{{req.url}}</div>
+                </div>
+            </div>
+
+            <!-- No requests in this collection -->
+            <div class="content-empty small-empty" *ngIf="requests.length === 0">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+                    opacity="0.2">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                </svg>
+                <p>No saved requests</p>
+                <small>Go to Request Builder and save a request to this collection</small>
+            </div>
+
+            <!-- Selected request detail -->
+            <div class="request-detail" *ngIf="selectedRequest">
+                <div class="detail-divider"></div>
+                <div class="detail-section">
+                    <div class="detail-top">
+                        <div class="detail-title-row">
+                            <span class="detail-method"
+                                [ngClass]="'method-' + (selectedRequest.method || 'get').toLowerCase()">
+                                {{selectedRequest.method || 'GET'}}
+                            </span>
+                            
+                            <!-- Display Name -->
+                            <div class="name-display" *ngIf="editingRequestId !== selectedRequest.id">
+                                <h3 class="detail-name">{{selectedRequest.title || selectedRequest.name || 'Untitled'}}</h3>
+                                <button class="btn btn-ghost btn-sm edit-name-btn" (click)="startEditingName(selectedRequest)" title="Edit Name">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Edit Name Input -->
+                            <div class="name-edit" *ngIf="editingRequestId === selectedRequest.id">
+                                <input type="text" class="inp" [(ngModel)]="editedRequestName" 
+                                    (keydown.enter)="saveRequestName(selectedRequest)"
+                                    (keydown.escape)="cancelEditingName()" autoFocus />
+                                <div class="name-edit-actions">
+                                    <button class="btn btn-primary btn-sm" (click)="saveRequestName(selectedRequest)">Save</button>
+                                    <button class="btn btn-ghost btn-sm" (click)="cancelEditingName()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-sm" (click)="openInBuilder(selectedRequest)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="22" y1="2" x2="11" y2="13" />
+                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                            </svg>
+                            Open in Builder
+                        </button>
+                    </div>
+                    <div class="detail-url-row">
+                        <span class="detail-label">URL</span>
+                        <code class="detail-url">{{selectedRequest.url}}</code>
+                    </div>
+                </div>
+
+                <!-- Headers -->
+                <div class="detail-section"
+                    *ngIf="selectedRequest.headers && getObjectKeys(parseJson(selectedRequest.headers)).length > 0">
+                    <span class="detail-label">Headers</span>
+                    <div class="detail-kv-list">
+                        <div *ngFor="let key of getObjectKeys(parseJson(selectedRequest.headers))" class="detail-kv">
+                            <span class="kv-key">{{key}}</span>
+                            <span class="kv-value">{{parseJson(selectedRequest.headers)[key]}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Query Params -->
+                <div class="detail-section"
+                    *ngIf="selectedRequest.query_params && getObjectKeys(parseJson(selectedRequest.query_params)).length > 0">
+                    <span class="detail-label">Query Parameters</span>
+                    <div class="detail-kv-list">
+                        <div *ngFor="let key of getObjectKeys(parseJson(selectedRequest.query_params))"
+                            class="detail-kv">
+                            <span class="kv-key">{{key}}</span>
+                            <span class="kv-value">{{parseJson(selectedRequest.query_params)[key]}}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="detail-section" *ngIf="selectedRequest.body">
+                    <div class="detail-label-row">
+                        <span class="detail-label">Body</span>
+                        <span class="detail-body-type"
+                            *ngIf="selectedRequest.body_type">{{selectedRequest.body_type}}</span>
+                    </div>
+                    <pre class="detail-body-pre">{{selectedRequest.body}}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

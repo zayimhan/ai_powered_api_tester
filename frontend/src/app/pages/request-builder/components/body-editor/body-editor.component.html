@@ -1,0 +1,25 @@
+<div class="body-editor">
+  <div class="body-top">
+    <label class="section-label">Request Body</label>
+    <div class="type-selector">
+      <select [(ngModel)]="bodyType" class="inp type-select">
+        <option value="NONE">none</option>
+        <option value="JSON">json</option>
+        <option value="FORM-DATA">form-data</option>
+        <option value="RAW">raw</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="body-content">
+    <textarea [hidden]="bodyType === 'NONE'" [(ngModel)]="rawBody" class="inp body-textarea"
+      placeholder="Enter request body here..."></textarea>
+
+    <div class="body-empty" [hidden]="bodyType !== 'NONE'">
+      <div class="empty-state">
+        <p>This request does not have a body.</p>
+        <small>Select a type like 'json' from the dropdown to start editing.</small>
+      </div>
+    </div>
+  </div>
+</div>

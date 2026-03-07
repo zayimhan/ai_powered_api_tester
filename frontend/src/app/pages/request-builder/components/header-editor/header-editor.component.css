@@ -1,0 +1,27 @@
+:host {
+    display: block;
+}
+
+.kv-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.kv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.kv-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 28px;
+    gap: 6px;
+    align-items: center;
+}
+
+.add-btn {
+    align-self: flex-start;
+    margin-top: 4px;
+}

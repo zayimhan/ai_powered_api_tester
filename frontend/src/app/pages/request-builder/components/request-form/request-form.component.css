@@ -1,0 +1,75 @@
+:host {
+    display: block;
+}
+
+.request-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Main row: Method + URL + Send */
+.form-main {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.method-select {
+    width: 100px;
+    flex-shrink: 0;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    padding: 8px 10px;
+}
+
+.url-input {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 8px 12px;
+}
+
+.send-btn {
+    flex-shrink: 0;
+    padding: 8px 20px;
+    font-weight: 600;
+}
+
+.send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Method colours */
+.method-get { color: var(--green); }
+.method-post { color: var(--accent); }
+.method-put { color: var(--orange); }
+.method-patch { color: var(--purple); }
+.method-delete { color: var(--red); }
+
+/* Secondary row: Name + Save */
+.form-secondary {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.title-input {
+    flex: 1;
+    font-size: 12px;
+    padding: 6px 10px;
+    color: var(--text-muted);
+}
+
+.save-btn {
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+.save-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}

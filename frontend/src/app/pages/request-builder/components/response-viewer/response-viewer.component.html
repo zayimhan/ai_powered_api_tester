@@ -1,0 +1,31 @@
+<div class="response-viewer">
+    <!-- Has response -->
+    <ng-container *ngIf="response">
+        <div class="response-header">
+            <span class="section-label">Response</span>
+            <div class="response-meta">
+                <span class="status-badge" [ngClass]="{
+            'status-2xx': response.status_code >= 200 && response.status_code < 300,
+            'status-3xx': response.status_code >= 300 && response.status_code < 400,
+            'status-4xx': response.status_code >= 400 && response.status_code < 500,
+            'status-5xx': response.status_code >= 500
+          }">
+                    {{ response.status_code }}
+                </span>
+                <span class="response-time">{{ response.response_time_ms }} ms</span>
+            </div>
+        </div>
+        <div class="response-body-wrap">
+            <pre class="response-body">{{ response.response_body | json }}</pre>
+        </div>
+    </ng-container>
+
+    <!-- No response -->
+    <div class="empty-state" *ngIf="!response">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+        </svg>
+        <p>Hit <strong>Send</strong> to get a response.</p>
+    </div>
+</div>

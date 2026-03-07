@@ -1,0 +1,36 @@
+<div class="modal-overlay" (click)="onCancel()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Save Request</h3>
+            <button class="close-btn" (click)="onCancel()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Request Name</label>
+                <input type="text" [(ngModel)]="title" class="inp" placeholder="e.g. Get User Profile">
+            </div>
+
+            <div class="form-group">
+                <label>Collection</label>
+                <select [(ngModel)]="selectedCollectionId" class="inp">
+                    <option *ngFor="let col of collections" [ngValue]="col.id">{{col.name}}</option>
+                    <option [ngValue]="-1">+ Create New Collection</option>
+                </select>
+            </div>
+
+            <div class="form-group animate-in" *ngIf="selectedCollectionId === -1">
+                <label>New Collection Name</label>
+                <input type="text" [(ngModel)]="newCollectionName" class="inp" placeholder="e.g. Auth API">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost" (click)="onCancel()">Cancel</button>
+            <button class="btn btn-primary" (click)="onSave()"
+                [disabled]="!title || (selectedCollectionId === -1 && !newCollectionName)">
+                Save Request
+            </button>
+        </div>
+    </div>
+</div>
