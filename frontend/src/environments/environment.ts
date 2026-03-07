@@ -1,4 +1,4 @@
 export const environment = {
-    production: false,
-    apiUrl: 'http://localhost:3000/api',
+    production: true,
+    apiUrl: 'https://ai-powered-api-tester.onrender.com/api',
 };
