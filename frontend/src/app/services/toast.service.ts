@@ -28,9 +28,17 @@ export class ToastService {
     this.show({ type: 'info', text });
   }
 
+  private timeoutId: ReturnType<typeof setTimeout> | null = null;
+
   private show(message: ToastMessage) {
+    if (this.timeoutId !== null) {
+      clearTimeout(this.timeoutId);
+    }
     this.toastSubject.next(message);
-    setTimeout(() => this.hide(), 3000);
+    this.timeoutId = setTimeout(() => {
+      this.hide();
+      this.timeoutId = null;
+    }, 3000);
   }
 
   hide() {

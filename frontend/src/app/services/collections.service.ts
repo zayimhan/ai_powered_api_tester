@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Collection, SavedRequest } from '../models/api.models';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionsService {
@@ -9,10 +10,10 @@ export class CollectionsService {
 
     constructor(private http: HttpClient) { }
 
-    getAll(): Observable<any[]> { return this.http.get<any[]>(this.baseUrl); }
-    getById(id: number): Observable<any> { return this.http.get(`${this.baseUrl}/${id}`); }
-    create(data: any): Observable<any> { return this.http.post(this.baseUrl, data); }
-    update(id: number, data: any): Observable<any> { return this.http.put(`${this.baseUrl}/${id}`, data); }
-    delete(id: number): Observable<any> { return this.http.delete(`${this.baseUrl}/${id}`); }
-    getRequests(id: number): Observable<any[]> { return this.http.get<any[]>(`${this.baseUrl}/${id}/requests`); }
+    getAll(): Observable<Collection[]> { return this.http.get<Collection[]>(this.baseUrl); }
+    getById(id: number): Observable<Collection> { return this.http.get<Collection>(`${this.baseUrl}/${id}`); }
+    create(data: Pick<Collection, 'name'>): Observable<Collection> { return this.http.post<Collection>(this.baseUrl, data); }
+    update(id: number, data: Partial<Collection>): Observable<Collection> { return this.http.put<Collection>(`${this.baseUrl}/${id}`, data); }
+    delete(id: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}`); }
+    getRequests(id: number): Observable<SavedRequest[]> { return this.http.get<SavedRequest[]>(`${this.baseUrl}/${id}/requests`); }
 }

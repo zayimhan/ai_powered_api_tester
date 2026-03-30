@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ExecutionPayload, ExecutionResult, HistoryItem } from '../models/api.models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -9,18 +10,15 @@ export class ApiService {
 
     constructor(private http: HttpClient) { }
 
-    // POST /api/executions/run
-    executeRequest(payload: any): Observable<any> {
-        return this.http.post(`${this.baseUrl}/executions/run`, payload);
+    executeRequest(payload: ExecutionPayload): Observable<ExecutionResult> {
+        return this.http.post<ExecutionResult>(`${this.baseUrl}/executions/run`, payload);
     }
 
-    // GET /api/executions/history
-    getHistory(): Observable<any[]> {
-        return this.http.get<any[]>(`${this.baseUrl}/executions/history`);
+    getHistory(): Observable<HistoryItem[]> {
+        return this.http.get<HistoryItem[]>(`${this.baseUrl}/executions/history`);
     }
 
-    // DELETE /api/executions/history/:id
-    deleteHistory(id: number): Observable<any> {
-        return this.http.delete<any>(`${this.baseUrl}/executions/history/${id}`);
+    deleteHistory(id: number): Observable<void> {
+        return this.http.delete<void>(`${this.baseUrl}/executions/history/${id}`);
     }
 }

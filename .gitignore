@@ -42,4 +42,5 @@ backend/database/*.sqlite
 ehthumbs.db
 Thumbs.db
 
+.claude
 

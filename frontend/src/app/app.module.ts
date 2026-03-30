@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, ErrorHandler } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { ErrorInterceptor } from './interceptors/error.interceptor';
 
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { HomeComponent } from './pages/home/home.component';
@@ -25,6 +26,12 @@ import { RegisterComponent } from './pages/auth/register/register.component';
 import { AuthorizationEditorComponent } from './pages/request-builder/components/authorization-editor/authorization-editor.component';
 import { SaveRequestModalComponent } from './pages/request-builder/components/save-request-modal/save-request-modal.component';
 import { ToastComponent } from './components/toast/toast.component';
+
+class GlobalErrorHandler implements ErrorHandler {
+    handleError(error: unknown): void {
+        console.error('Unhandled application error:', error);
+    }
+}
 
 @NgModule({
     declarations: [
@@ -56,7 +63,9 @@ import { ToastComponent } from './components/toast/toast.component';
         AppRoutingModule,
     ],
     providers: [
-        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+        { provide: ErrorHandler, useClass: GlobalErrorHandler },
+        { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+        { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
     ],
     bootstrap: [AppComponent],
 })
