@@ -40,4 +40,10 @@ try { db.exec('ALTER TABLE execution_history ADD COLUMN request_body TEXT'); } c
 try { db.exec('ALTER TABLE execution_history ADD COLUMN body_type TEXT'); } catch (e) { }
 try { db.exec('ALTER TABLE execution_history ADD COLUMN request_query_params TEXT'); } catch (e) { }
 
+// Migration: Add user_id to scenarios table if not present
+try { db.exec('ALTER TABLE scenarios ADD COLUMN user_id INTEGER REFERENCES users(id)'); } catch (e) { }
+
+// Migration: Add description to scenario_steps
+try { db.exec('ALTER TABLE scenario_steps ADD COLUMN description TEXT'); } catch (e) { }
+
 module.exports = db;

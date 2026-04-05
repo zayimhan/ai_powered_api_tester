@@ -10,7 +10,7 @@ import { AuthorizationEditorComponent } from './components/authorization-editor/
 import { RequestsService } from '../../services/requests.service';
 import { CollectionsService } from '../../services/collections.service';
 import { ToastService } from '../../services/toast.service';
-import { ExecutionResult, HistoryItem } from '../../models/api.models';
+import { Collection, SavedRequest, ExecutionResult, HistoryItem } from '../../models/api.models';
 
 @Component({
     selector: 'app-request-builder',
@@ -27,7 +27,19 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
     activeTab: 'headers' | 'params' | 'body' | 'auth' = 'headers';
     isLoading = false;
     history: HistoryItem[] = [];
+    sidebarOpen = true;
     historyOpen = true;
+    collectionsOpen = true;
+
+    // Base URL
+    baseUrl = '';
+    baseUrlEditing = false;
+    useBaseUrl = false;
+
+    // Collections
+    collections: Collection[] = [];
+    selectedCollectionId: number | null = null;
+    collectionRequests: SavedRequest[] = [];
 
     loadedRequest: { method: string; url: string; title?: string } | null = null;
 
@@ -45,7 +57,10 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
     ) { }
 
     ngOnInit() {
+        this.baseUrl = localStorage.getItem('apiflow_base_url') || '';
+        this.useBaseUrl = localStorage.getItem('apiflow_use_base_url') === 'true';
         this.fetchHistory();
+        this.fetchCollections();
 
         const state = history.state;
         if (state && state.request) {
@@ -65,6 +80,39 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
     ngOnDestroy() {
         this.destroy$.next();
         this.destroy$.complete();
+    }
+
+    fetchCollections() {
+        this.collectionsService.getAll()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+                next: (cols) => {
+                    this.collections = cols;
+                },
+                error: (err) => {
+                    console.error('Failed to load collections', err);
+                    this.collections = [];
+                }
+            });
+    }
+
+    onCollectionChange(collectionId: number) {
+        this.selectedCollectionId = collectionId;
+        this.collectionRequests = [];
+
+        if (collectionId) {
+            this.collectionsService.getRequests(collectionId)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                    next: (requests) => {
+                        this.collectionRequests = requests;
+                    },
+                    error: (err) => {
+                        console.error('Failed to load collection requests', err);
+                        this.collectionRequests = [];
+                    }
+                });
+        }
     }
 
     fetchHistory() {
@@ -116,6 +164,44 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
         return { headers, params };
     }
 
+    resolveUrl(url: string): string {
+        if (!url) return url;
+        if (!this.useBaseUrl || !this.baseUrl) return url;
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        const base = this.baseUrl.replace(/\/+$/, '');
+        const path = url.startsWith('/') ? url : '/' + url;
+        return base + path;
+    }
+
+    saveBaseUrl() {
+        this.baseUrl = this.baseUrl.trim();
+        localStorage.setItem('apiflow_base_url', this.baseUrl);
+        this.baseUrlEditing = false;
+        if (this.baseUrl) {
+            this.useBaseUrl = true;
+            localStorage.setItem('apiflow_use_base_url', 'true');
+        }
+        this.toastService.success('Base URL saved');
+    }
+
+    clearBaseUrl() {
+        this.baseUrl = '';
+        this.useBaseUrl = false;
+        localStorage.removeItem('apiflow_base_url');
+        localStorage.setItem('apiflow_use_base_url', 'false');
+        this.baseUrlEditing = false;
+    }
+
+    toggleUseBaseUrl() {
+        this.useBaseUrl = !this.useBaseUrl;
+        localStorage.setItem('apiflow_use_base_url', String(this.useBaseUrl));
+    }
+
+    disableBaseUrl() {
+        this.useBaseUrl = false;
+        localStorage.setItem('apiflow_use_base_url', 'false');
+    }
+
     handleSend(event: { method: string, url: string }) {
         if (!this.bodyEditor) {
             this.toastService.error('Editor components not ready. Please try again.');
@@ -134,7 +220,7 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
 
         const payload = {
             method: event.method,
-            url: event.url,
+            url: this.resolveUrl(event.url),
             headers,
             query_params: params,
             body: this.bodyEditor.bodyType.toUpperCase() !== 'NONE' ? this.bodyEditor.rawBody : null,
@@ -175,17 +261,18 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     private saveToCollection(collectionId: number, event: any) {
-        if (!this.bodyEditor) {
-            this.toastService.error('Editor components not ready. Please try again.');
-            return;
-        }
-        const parts = this.buildRequestParts();
-        if (!parts) {
+        if (!this.bodyEditor || !this.headerEditor || !this.queryEditor) {
             this.toastService.error('Editor components not ready. Please try again.');
             return;
         }
 
-        const { headers, params } = parts;
+        // Auth headers are NOT saved with the request — auth tokens are dynamic.
+        // Use {{token}} or {{variable}} placeholders in the Headers tab instead.
+        const headers: Record<string, string> = {};
+        this.headerEditor.headers.forEach(h => { if (h.key) headers[h.key] = h.value; });
+
+        const params: Record<string, string> = {};
+        this.queryEditor.params.forEach(p => { if (p.key) params[p.key] = p.value; });
 
         const requestData = {
             collection_id: collectionId,
@@ -203,6 +290,10 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
             .subscribe({
                 next: () => {
                     this.toastService.success('Request saved successfully');
+                    // Refresh collection requests if saved to currently selected collection
+                    if (this.selectedCollectionId === collectionId) {
+                        this.onCollectionChange(collectionId);
+                    }
                 },
                 error: () => {
                     this.toastService.error('Failed to save request');
@@ -216,11 +307,67 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
             url: item.url || ''
         };
 
-        if (item.request_body && item.body_type && this.bodyEditor) {
-            this.bodyEditor.bodyType = item.body_type;
-            this.bodyEditor.rawBody = item.request_body;
-            this.activeTab = 'body';
+        // Restore or clear body
+        if (this.bodyEditor) {
+            if (item.request_body && item.body_type) {
+                this.bodyEditor.bodyType = item.body_type;
+                this.bodyEditor.rawBody = item.request_body;
+            } else {
+                this.bodyEditor.bodyType = 'NONE';
+                this.bodyEditor.rawBody = '';
+            }
         }
+
+        // Restore or clear headers
+        if (this.headerEditor) {
+            if (item.request_headers) {
+                try {
+                    const h = typeof item.request_headers === 'string'
+                        ? JSON.parse(item.request_headers)
+                        : item.request_headers;
+                    const keys = Object.keys(h);
+                    this.headerEditor.headers = keys.length > 0
+                        ? keys.map(k => ({ key: k, value: h[k] }))
+                        : [];
+                } catch {
+                    this.headerEditor.headers = [];
+                }
+            } else {
+                this.headerEditor.headers = [];
+            }
+        }
+
+        // Restore or clear query params
+        if (this.queryEditor) {
+            if (item.request_query_params) {
+                try {
+                    const p = typeof item.request_query_params === 'string'
+                        ? JSON.parse(item.request_query_params)
+                        : item.request_query_params;
+                    const keys = Object.keys(p);
+                    this.queryEditor.params = keys.length > 0
+                        ? keys.map(k => ({ key: k, value: p[k] }))
+                        : [];
+                } catch {
+                    this.queryEditor.params = [];
+                }
+            } else {
+                this.queryEditor.params = [];
+            }
+        }
+
+        // Clear auth
+        if (this.authEditor) {
+            this.authEditor.authType = 'none';
+            this.authEditor.bearerToken = '';
+            this.authEditor.basicUsername = '';
+            this.authEditor.basicPassword = '';
+            this.authEditor.apiKey = '';
+            this.authEditor.apiKeyValue = '';
+            this.authEditor.apiKeyAddTo = 'header';
+        }
+
+        this.activeTab = 'headers';
     }
 
     loadSavedRequest(req: any) {
@@ -230,37 +377,67 @@ export class RequestBuilderComponent implements OnInit, AfterViewInit, OnDestroy
             title: req.name || req.title || ''
         };
 
-        if (req.body && req.body_type && this.bodyEditor) {
-            this.bodyEditor.bodyType = req.body_type;
-            this.bodyEditor.rawBody = req.body;
-            this.activeTab = 'body';
+        // Restore or clear body
+        if (this.bodyEditor) {
+            if (req.body && req.body_type) {
+                this.bodyEditor.bodyType = req.body_type;
+                this.bodyEditor.rawBody = req.body;
+            } else {
+                this.bodyEditor.bodyType = 'NONE';
+                this.bodyEditor.rawBody = '';
+            }
         }
 
-        if (req.headers && typeof req.headers === 'string' && this.headerEditor) {
-            try {
-                const h = JSON.parse(req.headers);
-                const keys = Object.keys(h);
-                if (keys.length > 0) {
-                    this.headerEditor.headers = keys.map(k => ({ key: k, value: h[k] }));
-                    this.activeTab = 'headers';
+        // Restore or clear headers
+        if (this.headerEditor) {
+            if (req.headers && typeof req.headers === 'string') {
+                try {
+                    const h = JSON.parse(req.headers);
+                    const keys = Object.keys(h);
+                    this.headerEditor.headers = keys.length > 0
+                        ? keys.map((k: string) => ({ key: k, value: h[k] }))
+                        : [];
+                } catch {
+                    this.headerEditor.headers = [];
                 }
-            } catch {}
+            } else {
+                this.headerEditor.headers = [];
+            }
         }
 
-        if (req.query_params && typeof req.query_params === 'string' && this.queryEditor) {
-            try {
-                const p = JSON.parse(req.query_params);
-                const keys = Object.keys(p);
-                if (keys.length > 0) {
-                    this.queryEditor.params = keys.map(k => ({ key: k, value: p[k] }));
-                    this.activeTab = 'params';
+        // Restore or clear query params
+        if (this.queryEditor) {
+            if (req.query_params && typeof req.query_params === 'string') {
+                try {
+                    const p = JSON.parse(req.query_params);
+                    const keys = Object.keys(p);
+                    this.queryEditor.params = keys.length > 0
+                        ? keys.map((k: string) => ({ key: k, value: p[k] }))
+                        : [];
+                } catch {
+                    this.queryEditor.params = [];
                 }
-            } catch {}
+            } else {
+                this.queryEditor.params = [];
+            }
         }
+
+        // Clear auth
+        if (this.authEditor) {
+            this.authEditor.authType = 'none';
+            this.authEditor.bearerToken = '';
+            this.authEditor.basicUsername = '';
+            this.authEditor.basicPassword = '';
+            this.authEditor.apiKey = '';
+            this.authEditor.apiKeyValue = '';
+            this.authEditor.apiKeyAddTo = 'header';
+        }
+
+        this.activeTab = 'headers';
     }
 
-    toggleHistory() {
-        this.historyOpen = !this.historyOpen;
+    toggleSidebar() {
+        this.sidebarOpen = !this.sidebarOpen;
     }
 
     getRelativeTime(dateStr: string): string {

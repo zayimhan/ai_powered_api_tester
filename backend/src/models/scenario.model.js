@@ -1,10 +1,11 @@
-// LOCKED FEATURE — Scenario and ScenarioStep models
+// Scenario and ScenarioStep models
 
 // scenarios table
 const scenarioTable = `
   CREATE TABLE IF NOT EXISTS scenarios (
     id                        INTEGER PRIMARY KEY AUTOINCREMENT,
     collection_id             INTEGER REFERENCES collections(id) ON DELETE CASCADE,
+    user_id                   INTEGER REFERENCES users(id),
     name                      TEXT,
     natural_language_command  TEXT,
     generated_plan            TEXT,

@@ -5,6 +5,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+build.log
+build-errors.log
+correct_build_errors.log
 # Angular build output
 dist/
 dist-server/

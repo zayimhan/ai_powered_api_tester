@@ -1,0 +1,24 @@
+[project]
+name = "apiflow-crew"
+version = "0.1.0"
+description = "CrewAI-powered AI agent for APIFlow scenario testing"
+authors = [{ name = "zayimhan" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=0.108.0,<1.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+    "python-dotenv>=1.0.0"
+]
+
+[project.scripts]
+apiflow_crew = "apiflow_crew.main:run"
+run_crew = "apiflow_crew.main:run"
+serve = "apiflow_crew.server:start"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"

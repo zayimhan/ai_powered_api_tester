@@ -1,0 +1,128 @@
+parse_scenario:
+  description: >
+    Parse this natural language command into structured steps:
+
+    Command: {command}
+
+    Available saved requests in collection "{collection_name}":
+    {saved_requests_summary}
+
+    STRICT RULES:
+    - Generate ONLY the steps that are EXPLICITLY mentioned in the command. Do NOT invent, add, or infer extra steps.
+    - The available requests list is shown only so you can understand what exists. Do NOT add steps just because an endpoint is available.
+    - If the command says "register and login", generate exactly 2 steps: register, login. Nothing more.
+    - If the command says "two users" or "2 users", generate steps for EACH user separately and give them DISTINCT actor names: "UserA" and "UserB" (never "User" for both).
+    - If multiple actors are mentioned (e.g. "User A and User B"), generate one step per actor per action.
+    - Never use the same actor name for two different users.
+    - Never generate steps that were not asked for.
+
+    For each step identify:
+    - A short description of what the step does
+    - Which actor performs it (if multiple users are involved, e.g. "UserA", "UserB"; use "User" if only one)
+    - The order of execution
+
+    Return ONLY valid JSON, no markdown, no explanation. Use this exact structure:
+    A JSON object with a "steps" array. Each step has: "order" (integer), "description" (string), "actor" (string), "action_keyword" (string).
+  expected_output: >
+    A JSON object with a "steps" array containing ONLY the steps explicitly requested in the command.
+  agent: scenario_parser
+
+match_endpoints:
+  description: >
+    Match each parsed step to a saved request from the collection.
+
+    Parsed steps from previous task: use the output from the previous task.
+
+    Available saved requests:
+    {saved_requests_detail}
+
+    STRICT RULES:
+    - Match ONLY the steps that exist in the parsed steps list. Do NOT add new steps.
+    - The output must have the same number of steps as the input.
+    - For each step, find the best matching saved request by comparing the step description and action_keyword with request names, methods, and URL patterns.
+
+    Return ONLY valid JSON, no markdown, no explanation. Use this exact structure:
+    A JSON object with a "matched_steps" array. Each item has: "order" (integer), "description" (string), "actor" (string), "request_id" (integer), "request_name" (string), "method" (string), "url" (string).
+  expected_output: >
+    A JSON object with "matched_steps" array where each step has a request_id. Same number of steps as input.
+  agent: endpoint_matcher
+
+generate_plan:
+  description: >
+    Generate an executable test plan with variable dependencies.
+
+    Matched steps from previous task: use the output from the previous task.
+
+    Available saved requests with full details:
+    {saved_requests_detail}
+
+    STRICT RULES:
+    - Output EXACTLY the same steps as received from the previous task. Do NOT add, remove, or merge steps.
+    - The output must have the same number of steps as the input.
+
+    Variable naming convention:
+    - After each step, response fields are stored with actor prefix: ActorName_fieldName
+    - Examples: UserA_id, UserA_token, UserB_id, UserB_token
+    - If UserA_id already exists and UserA's later step returns another id, it becomes UserA_created_id
+    - When using a variable in inputs, write the variable name surrounded by double curly braces
+
+    inputs rules (CRITICAL):
+    - inputs must be a JSON object with optional "body" (object) and "headers" (object) keys
+    - Only set inputs.body when a field value must come from another step's response (e.g. another actor's id)
+    - To reference a variable: write the field name as key, and the variable name surrounded by double curly braces as the string value
+    - The field name MUST match the exact field name shown in body(fields: ...) for that saved request
+    - Do NOT set inputs.body for static content fields (url, title, platform, description, etc.) — those come from the saved request body as-is
+    - Do NOT invent field names. Only use field names that appear in body(fields: ...) of the saved request
+    - If no injection is needed, use empty object
+
+    Cross-actor example (in words): if saved request body has field "userId" and UserB must send UserA's id,
+    set inputs.body as an object where "userId" key has the value of UserA_id surrounded by double curly braces.
+
+    Return ONLY valid JSON, no markdown, no explanation. Use this exact structure:
+    A JSON object with a "steps" array. Each step has: "order" (integer), "request_id" (integer), "actor" (string), "description" (string), "inputs" (object), "extract_variables" (array of strings), "assertions" (empty array).
+  expected_output: >
+    A JSON object with "steps" array containing the full execution plan. Same number of steps as input.
+  agent: plan_generator
+
+generate_assertions:
+  description: >
+    Add meaningful assertions to each step of the test plan.
+
+    Execution plan from previous task: use the output from the previous task.
+
+    DEFAULT RULE: Add "status_success" assertion to every step. It has no expected value and passes for any 2xx response.
+
+    ADDITIONAL ASSERTIONS (only when clearly applicable):
+    - Login/auth steps returning a token: add body_field_exists with field "token" and expected "exists"
+    - GET endpoints: add response_time_below with expected 2000
+    - Verification steps: when the step description or the original command implies checking whether
+      an actor's data appears in a response (friend list, feed, search results, etc.), infer the
+      correct assertion from natural language:
+        * "X should be in the list / feed / result" or "X exists" or "X is there" or "contains X"
+          → body_contains, expected = the relevant actor's id variable surrounded by double curly braces
+        * "X should NOT be in the list / feed / result" or "X does not exist" or "not contains X"
+          or "before accepting" checks or "expected not exists"
+          → body_not_contains, expected = the relevant actor's id variable surrounded by double curly braces
+      The actor id variable to use is the id of the actor whose presence is being verified.
+      For example: checking if UserA's post appears in a feed → use UserA_id surrounded by double curly braces,
+      because feed items contain the poster's user id.
+      Checking if UserA is in a friend list → use UserA_id surrounded by double curly braces.
+
+    ASSERTION TYPE REFERENCE:
+    - status_success: no expected field. Passes for any 2xx. Use when the step SHOULD succeed.
+    - status_failure: no expected field. Passes for any 4xx or 5xx. Use when the step SHOULD be rejected or forbidden (e.g. "should not be allowed", "should be rejected", "should fail", "should get an error").
+    - status_code: expected is an exact integer. Only when an exact code is required.
+    - body_empty: no expected field. Passes if the response is an empty array or object. Use for "list should be empty", "no results yet", "should return nothing".
+    - body_not_empty: no expected field. Passes if the response has at least one item. Use for "list should have items", "should return results".
+    - body_contains: expected is a string or a variable name surrounded by double curly braces.
+    - body_not_contains: same, passes when value is absent.
+    - body_field_exists: field is dot-notation path, expected is "exists".
+    - body_field_not_exists: field is dot-notation path. Passes if field is absent.
+    - body_field_equals: field is dot-notation path, expected is the exact value.
+    - response_time_below: expected is milliseconds.
+
+    Return ONLY valid JSON, no markdown, no explanation. Use this exact structure:
+    A JSON object with a "steps" array. Each step has: "order" (integer), "request_id" (integer), "actor" (string), "description" (string), "inputs" (object, copy exactly from previous task), "assertions" (array). Each assertion has "type" (string), optional "field" (string), optional "expected" (string or number).
+  expected_output: >
+    A JSON object with "steps" array where each step has at least a status_success assertion.
+  agent: assertion_generator

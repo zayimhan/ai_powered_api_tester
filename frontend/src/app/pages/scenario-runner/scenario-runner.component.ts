@@ -1,9 +1,272 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from "@angular/core";
+import { ScenarioService } from "../../services/scenario.service";
+import { CollectionsService } from "../../services/collections.service";
+import { ToastService } from "../../services/toast.service";
+import {
+  Collection,
+  Scenario,
+  ScenarioStep,
+  ScenarioRunResult,
+} from "../../models/api.models";
 
-// LOCKED FEATURE — Scenario Runner Page
 @Component({
-    selector: 'app-scenario-runner',
-    templateUrl: './scenario-runner.component.html',
-    styleUrls: ['./scenario-runner.component.css'],
+  selector: "app-scenario-runner",
+  templateUrl: "./scenario-runner.component.html",
+  styleUrls: ["./scenario-runner.component.css"],
 })
-export class ScenarioRunnerComponent { }
+export class ScenarioRunnerComponent implements OnInit {
+  // ─── State ───
+  collections: Collection[] = [];
+  selectedCollectionId: number | null = null;
+  command = "";
+
+  // Current scenario
+  scenario: Scenario | null = null;
+  steps: ScenarioStep[] = [];
+  runResult: ScenarioRunResult | null = null;
+
+  // Past scenarios
+  scenarios: Scenario[] = [];
+
+  // UI state
+  loading = false;
+  analyzing = false;
+  running = false;
+  activeView: "input" | "plan" | "results" = "input";
+
+  constructor(
+    private scenarioService: ScenarioService,
+    private collectionsService: CollectionsService,
+    private toast: ToastService,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadCollections();
+    this.loadScenarios();
+  }
+
+  // ─── Data Loading ───
+
+  loadCollections(): void {
+    this.collectionsService.getAll().subscribe({
+      next: (data) => (this.collections = data),
+      error: () => this.toast.error("Failed to load collections"),
+    });
+  }
+
+  loadScenarios(): void {
+    this.scenarioService.getAll().subscribe({
+      next: (data) => (this.scenarios = data),
+      error: () => {},
+    });
+  }
+
+  // ─── Analyze (Send to CrewAI) ───
+
+  analyze(): void {
+    if (!this.selectedCollectionId || !this.command.trim()) {
+      this.toast.error("Select a collection and enter a command");
+      return;
+    }
+
+    this.analyzing = true;
+    this.scenarioService
+      .analyze({
+        collection_id: this.selectedCollectionId,
+        natural_language_command: this.command.trim(),
+      })
+      .subscribe({
+        next: (res) => {
+          this.scenario = res.scenario;
+          this.steps = res.steps;
+          this.runResult = null;
+          this.activeView = "plan";
+          this.analyzing = false;
+          this.loadScenarios();
+          this.toast.success("Plan generated successfully");
+        },
+        error: (err) => {
+          this.analyzing = false;
+          this.toast.error(err.error?.error || "Analysis failed");
+        },
+      });
+  }
+
+  // ─── Run Scenario ───
+
+  runScenario(): void {
+    if (!this.scenario) return;
+
+    this.running = true;
+    this.scenarioService.run(this.scenario.id).subscribe({
+      next: (result) => {
+        this.runResult = result;
+        this.activeView = "results";
+        this.running = false;
+        this.loadScenarios();
+
+        const passed = result.steps.filter((s) => s.status === "passed").length;
+        const total = result.steps.length;
+        if (result.status === "passed") {
+          this.toast.success(`Execution complete: ${passed}/${total} passed`);
+        } else {
+          this.toast.error(`Execution complete: ${passed}/${total} passed`);
+        }
+      },
+      error: (err) => {
+        this.running = false;
+        this.toast.error(err.error?.error || "Execution failed");
+      },
+    });
+  }
+
+  // ─── Replan ───
+
+  replan(): void {
+    if (!this.scenario) return;
+
+    this.analyzing = true;
+    this.scenarioService.replan(this.scenario.id).subscribe({
+      next: (res) => {
+        this.scenario = res.scenario;
+        this.steps = res.steps;
+        this.runResult = null;
+        this.activeView = "plan";
+        this.analyzing = false;
+        this.toast.success("Plan regenerated");
+      },
+      error: (err) => {
+        this.analyzing = false;
+        this.toast.error(err.error?.error || "Replan failed");
+      },
+    });
+  }
+
+  // ─── Load Past Scenario ───
+
+  loadScenario(id: number): void {
+    this.loading = true;
+    this.scenarioService.getById(id).subscribe({
+      next: (scenario) => {
+        this.scenario = scenario;
+        this.scenarioService.getSteps(id).subscribe({
+          next: (steps) => {
+            this.steps = steps;
+            this.runResult = null;
+            this.activeView = "plan";
+            this.loading = false;
+          },
+        });
+      },
+      error: () => {
+        this.loading = false;
+        this.toast.error("Failed to load scenario");
+      },
+    });
+  }
+
+  deleteScenario(id: number): void {
+    this.scenarioService.delete(id).subscribe({
+      next: () => {
+        this.scenarios = this.scenarios.filter((s) => s.id !== id);
+        if (this.scenario?.id === id) {
+          this.scenario = null;
+          this.steps = [];
+          this.runResult = null;
+          this.activeView = "input";
+        }
+        this.toast.success("Scenario deleted");
+      },
+    });
+  }
+
+  // ─── Helpers ───
+
+  resetToInput(): void {
+    this.scenario = null;
+    this.steps = [];
+    this.runResult = null;
+    this.command = "";
+    this.activeView = "input";
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case "passed":
+        return "status-passed";
+      case "failed":
+        return "status-failed";
+      case "error":
+        return "status-error";
+      case "running":
+        return "status-running";
+      case "planned":
+        return "status-planned";
+      default:
+        return "status-pending";
+    }
+  }
+
+  getMethodClass(method: string): string {
+    return `method-${(method || "get").toLowerCase()}`;
+  }
+
+  getFieldLabel(key: string): string {
+    const labels: Record<string, string> = {
+      email: "E-posta",
+      username: "Kullanıcı adı",
+      password: "Şifre",
+      name: "Ad",
+      phone: "Telefon",
+    };
+    return labels[key] ?? key;
+  }
+
+  getPassedCount(): number {
+    return (
+      this.runResult?.steps.filter((s) => s.status === "passed").length || 0
+    );
+  }
+
+  getFailedCount(): number {
+    return (
+      this.runResult?.steps.filter((s) => s.status !== "passed").length || 0
+    );
+  }
+
+  // ─── Request/Response Detail Toggle ───
+
+  expandedSteps = new Set<number>();
+
+  toggleDetail(stepId: number): void {
+    if (this.expandedSteps.has(stepId)) {
+      this.expandedSteps.delete(stepId);
+    } else {
+      this.expandedSteps.add(stepId);
+    }
+  }
+
+  isExpanded(stepId: number): boolean {
+    return this.expandedSteps.has(stepId);
+  }
+
+  formatJson(value: any): string {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "string") {
+      try {
+        return JSON.stringify(JSON.parse(value), null, 2);
+      } catch {
+        return value;
+      }
+    }
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  }
+
+  hasHeaders(headers: Record<string, string> | null | undefined): boolean {
+    return !!headers && Object.keys(headers).length > 0;
+  }
+}

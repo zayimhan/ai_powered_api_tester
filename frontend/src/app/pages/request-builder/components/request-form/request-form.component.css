@@ -15,13 +15,179 @@
     align-items: center;
 }
 
-.method-select {
-    width: 100px;
+/* ─── Custom Method Dropdown ─── */
+.method-dropdown {
+    position: relative;
     flex-shrink: 0;
-    font-weight: 600;
+}
+
+.method-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+    cursor: pointer;
+    font-weight: 700;
     font-size: 12px;
     font-family: var(--font-mono);
-    padding: 8px 10px;
+    min-width: 95px;
+    justify-content: space-between;
+    transition: filter 0.15s ease;
+}
+
+.method-dropdown-toggle:hover {
+    filter: brightness(1.15);
+}
+
+.method-dropdown-toggle svg {
+    opacity: 0.6;
+    transition: transform 0.2s ease;
+}
+
+.method-dropdown.open .method-dropdown-toggle svg {
+    transform: rotate(180deg);
+}
+
+.method-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    z-index: 50;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    animation: dropdownSlide 0.15s ease;
+}
+
+@keyframes dropdownSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.method-dropdown-item {
+    display: flex;
+    align-items: center;
+    padding: 7px 12px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    background: transparent !important;
+    transition: background 0.1s ease, border-color 0.1s ease;
+}
+
+.method-dropdown-item:hover {
+    background: var(--surface-2) !important;
+    border-color: currentColor;
+}
+
+.method-dropdown-item.selected {
+    background: var(--surface-2) !important;
+    border-color: currentColor;
+}
+
+/* ─── Method Colors (shared by toggle + items) ─── */
+.method-get {
+    color: var(--green);
+    background: rgba(63, 185, 80, 0.12);
+    border-color: rgba(63, 185, 80, 0.3);
+}
+
+.method-post {
+    color: var(--accent);
+    background: rgba(47, 129, 247, 0.12);
+    border-color: rgba(47, 129, 247, 0.3);
+}
+
+.method-put {
+    color: var(--orange);
+    background: rgba(240, 136, 62, 0.12);
+    border-color: rgba(240, 136, 62, 0.3);
+}
+
+.method-patch {
+    color: var(--purple);
+    background: rgba(163, 113, 247, 0.12);
+    border-color: rgba(163, 113, 247, 0.3);
+}
+
+.method-delete {
+    color: var(--red);
+    background: rgba(248, 81, 73, 0.12);
+    border-color: rgba(248, 81, 73, 0.3);
+}
+
+/* ─── URL Wrapper (chip + input) ─── */
+.url-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--transition);
+    min-width: 0;
+}
+
+.url-wrapper:focus-within {
+    border-color: var(--accent);
+}
+
+.base-url-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    margin: 3px 0 3px 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent-hover);
+    white-space: nowrap;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.base-url-chip svg {
+    opacity: 0.6;
+}
+
+.chip-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim);
+    padding: 1px;
+    border-radius: 3px;
+    margin-left: 2px;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.chip-remove:hover {
+    color: var(--red);
+    background: rgba(248, 81, 73, 0.12);
 }
 
 .url-input {
@@ -29,8 +195,22 @@
     font-family: var(--font-mono);
     font-size: 13px;
     padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    outline: none;
+    min-width: 0;
 }
 
+.url-input::placeholder {
+    color: var(--text-dim);
+}
+
+.url-input.has-chip {
+    padding-left: 6px;
+}
+
+/* ─── Send Button ─── */
 .send-btn {
     flex-shrink: 0;
     padding: 8px 20px;
@@ -42,14 +222,7 @@
     cursor: not-allowed;
 }
 
-/* Method colours */
-.method-get { color: var(--green); }
-.method-post { color: var(--accent); }
-.method-put { color: var(--orange); }
-.method-patch { color: var(--purple); }
-.method-delete { color: var(--red); }
-
-/* Secondary row: Name + Save */
+/* ─── Secondary Row ─── */
 .form-secondary {
     display: flex;
     gap: 8px;
