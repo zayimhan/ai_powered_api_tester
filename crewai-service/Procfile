@@ -1,1 +1,1 @@
-web: uvicorn apiflow_crew.server:app --host 0.0.0.0 --port $PORT
+web: cd src && uvicorn apiflow_crew.server:app --host 0.0.0.0 --port $PORT
