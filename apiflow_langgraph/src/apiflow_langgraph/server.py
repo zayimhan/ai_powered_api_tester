@@ -22,6 +22,7 @@ _graph = None
 async def lifespan(app: FastAPI):
     global _graph
     db_path = os.environ.get("CHECKPOINT_DB_PATH") or "langgraph_checkpoints.db"
+    os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
     builder = build_graph_builder()
 
     async with AsyncSqliteSaver.from_conn_string(db_path) as checkpointer:
