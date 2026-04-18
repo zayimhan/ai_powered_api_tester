@@ -32,6 +32,8 @@ export class ScenarioRunnerComponent implements OnInit {
   loading = false;
   analyzing = false;
   running = false;
+  smartRunning = false;
+  lastRunEngine: 'deterministic' | 'langgraph' = 'deterministic';
   activeView: "input" | "plan" | "results" = "input";
 
   constructor(
@@ -116,6 +118,54 @@ export class ScenarioRunnerComponent implements OnInit {
       error: (err) => {
         this.running = false;
         this.toast.error(err.error?.error || "Execution failed");
+      },
+    });
+  }
+
+  // ─── Smart Run (LangGraph) ───
+
+  runGraphScenario(): void {
+    if (!this.scenario) return;
+
+    this.smartRunning = true;
+    this.scenarioService.runGraph(this.scenario.id).subscribe({
+      next: (data) => {
+        // Normalize LangGraph response to ScenarioRunResult shape
+        const steps = (data.step_results || []).map((s: any) => ({
+          step_id: s.step_index ?? 0,
+          step_order: s.step_order ?? s.step_index + 1,
+          status: s.passed ? 'passed' : 'failed',
+          status_code: s.status_code,
+          response_time_ms: s.response_time_ms,
+          assertions: s.assertions,
+          extracted_variables: s.extracted_variables,
+          used_credentials: s.used_credentials,
+          actor: s.actor,
+          evaluator_feedback: s.evaluator_feedback,
+          heal_attempts: s.heal_attempts ?? 0,
+        }));
+
+        this.runResult = {
+          scenario_id: this.scenario!.id,
+          status: data.final_status === 'passed' ? 'passed' : 'failed',
+          steps,
+        };
+        this.lastRunEngine = 'langgraph';
+        this.activeView = 'results';
+        this.smartRunning = false;
+        this.loadScenarios();
+
+        const passed = steps.filter((s: any) => s.status === 'passed').length;
+        const total = steps.length;
+        if (data.final_status === 'passed') {
+          this.toast.success(`Smart Run complete: ${passed}/${total} passed`);
+        } else {
+          this.toast.error(`Smart Run complete: ${passed}/${total} passed`);
+        }
+      },
+      error: (err) => {
+        this.smartRunning = false;
+        this.toast.error(err.error?.error || 'Smart Run failed');
       },
     });
   }

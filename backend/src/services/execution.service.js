@@ -3,7 +3,8 @@ const responseParser = require('./response-parser.service');
 
 // Execute an outbound HTTP request and return normalised result
 async function execute(requestConfig) {
-    const { method, url, headers, query_params, body, body_type, collection_id, request_id } = requestConfig;
+    const { method, headers, query_params, body, body_type, collection_id, request_id } = requestConfig;
+    const url = (requestConfig.url || '').trim();
 
     const finalHeaders = { ...headers };
     let finalBody = body;

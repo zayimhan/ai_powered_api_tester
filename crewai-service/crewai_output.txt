@@ -1,0 +1,26 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260405192209
+Username: DESKTOP-J6UCE4U\zayimhan
+RunAs User: DESKTOP-J6UCE4U\zayimhan
+Configuration Name: 
+Machine: DESKTOP-J6UCE4U (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 6104
+PSVersion: 5.1.26100.7920
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7920
+BuildVersion: 10.0.26100.7920
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is crewai_output.txt
+PS C:\Users\zayimhan\Desktop\ai_powered_api_tester\crewai-service> python -m apiflow_crew.main
+
+PS C:\Users\zayimhan\Desktop\ai_powered_api_tester\crewai-service> Stop-Transcript
+**********************
+Windows PowerShell transcript end
+End time: 20260405192410
+**********************

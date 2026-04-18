@@ -158,5 +158,7 @@ export interface ScenarioRunResult {
     response_body?: any;
     actor?: string;
     error?: string;
+    heal_attempts?: number;
+    evaluator_feedback?: string;
   }[];
 }

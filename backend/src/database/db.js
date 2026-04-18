@@ -81,4 +81,11 @@ try {
   db.exec("ALTER TABLE scenario_steps ADD COLUMN description TEXT");
 } catch (e) {}
 
+// Migration: LangGraph columns
+try { db.exec("ALTER TABLE scenarios ADD COLUMN langgraph_thread_id TEXT"); } catch (e) {}
+try { db.exec("ALTER TABLE scenarios ADD COLUMN engine TEXT DEFAULT 'deterministic'"); } catch (e) {}
+try { db.exec("ALTER TABLE scenario_steps ADD COLUMN heal_attempts INTEGER DEFAULT 0"); } catch (e) {}
+try { db.exec("ALTER TABLE scenario_steps ADD COLUMN heal_log TEXT"); } catch (e) {}
+try { db.exec("ALTER TABLE scenario_steps ADD COLUMN evaluator_feedback TEXT"); } catch (e) {}
+
 module.exports = db;

@@ -1,6 +1,7 @@
 const db = require('../database/db');
 const scenarioService = require('../services/scenario.service');
 const scenarioAgentService = require('../services/scenario-agent.service');
+const langgraphAgentService = require('../services/langgraph-agent.service');
 const requestService = require('../services/request.service');
 const collectionService = require('../services/collection.service');
 
@@ -145,4 +146,22 @@ async function replan(req, res) {
     }
 }
 
-module.exports = { getAll, create, getById, update, remove, getByCollection, getSteps, analyze, run, replan };
+async function runGraph(req, res) {
+    try {
+        const scenario = scenarioService.getScenarioById(db, req.params.id, req.user.id);
+        if (!scenario) return res.status(404).json({ error: 'Scenario not found' });
+
+        const steps = scenarioService.getStepsByScenario(db, req.params.id, req.user.id);
+        if (!steps || steps.length === 0) {
+            return res.status(400).json({ error: 'Scenario has no steps to execute' });
+        }
+
+        const result = await langgraphAgentService.runWithLangGraph(db, scenario, steps, req.user.id);
+        res.json(result);
+    } catch (err) {
+        console.error('LangGraph run error:', err);
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAll, create, getById, update, remove, getByCollection, getSteps, analyze, run, replan, runGraph };

@@ -44,13 +44,15 @@ function createScenario(db, data, userId) {
 }
 
 function updateScenario(db, id, data, userId) {
-    const { name, natural_language_command, generated_plan, status } = data;
+    const { name, natural_language_command, generated_plan, status, langgraph_thread_id, engine } = data;
     const stmt = db.prepare(`
         UPDATE scenarios
         SET name = COALESCE(?, name),
             natural_language_command = COALESCE(?, natural_language_command),
             generated_plan = COALESCE(?, generated_plan),
             status = COALESCE(?, status),
+            langgraph_thread_id = COALESCE(?, langgraph_thread_id),
+            engine = COALESCE(?, engine),
             updated_at = datetime('now')
         WHERE id = ? AND user_id = ?
     `);
@@ -59,6 +61,8 @@ function updateScenario(db, id, data, userId) {
         natural_language_command || null,
         data.generated_plan !== undefined ? JSON.stringify(generated_plan) : null,
         status || null,
+        langgraph_thread_id || null,
+        engine || null,
         Number(id),
         Number(userId)
     );
@@ -124,13 +128,16 @@ function createStep(db, scenarioId, data) {
 }
 
 function updateStep(db, stepId, data) {
-    const { status, result_snapshot, resolved_inputs, assertions } = data;
+    const { status, result_snapshot, resolved_inputs, assertions, heal_attempts, heal_log, evaluator_feedback } = data;
     const stmt = db.prepare(`
         UPDATE scenario_steps
         SET status = COALESCE(?, status),
             result_snapshot = COALESCE(?, result_snapshot),
             resolved_inputs = COALESCE(?, resolved_inputs),
             assertions = COALESCE(?, assertions),
+            heal_attempts = COALESCE(?, heal_attempts),
+            heal_log = COALESCE(?, heal_log),
+            evaluator_feedback = COALESCE(?, evaluator_feedback),
             executed_at = CASE WHEN ? IS NOT NULL THEN datetime('now') ELSE executed_at END
         WHERE id = ?
     `);
@@ -139,6 +146,9 @@ function updateStep(db, stepId, data) {
         data.result_snapshot !== undefined ? JSON.stringify(result_snapshot) : null,
         data.resolved_inputs !== undefined ? JSON.stringify(resolved_inputs) : null,
         data.assertions !== undefined ? JSON.stringify(assertions) : null,
+        data.heal_attempts !== undefined ? Number(heal_attempts) : null,
+        heal_log || null,
+        evaluator_feedback || null,
         status || null,
         Number(stepId)
     );
