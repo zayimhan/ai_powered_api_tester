@@ -74,13 +74,17 @@
                 </div>
                 <p class="plan-command">{{ scenario.natural_language_command }}</p>
                 <div class="plan-actions">
-                    <button class="btn-primary" (click)="runScenario()" [disabled]="running || smartRunning || steps.length === 0">
+                    <button class="btn-primary" (click)="runScenario()" [disabled]="running || smartRunning || resuming || steps.length === 0">
                         <span *ngIf="!running">Run</span>
                         <span *ngIf="running" class="loading-text"><span class="spinner"></span> Running...</span>
                     </button>
-                    <button class="btn-smart" (click)="runGraphScenario()" [disabled]="running || smartRunning || steps.length === 0">
+                    <button class="btn-smart" (click)="runGraphScenario()" [disabled]="running || smartRunning || resuming || steps.length === 0">
                         <span *ngIf="!smartRunning">⚡ Smart Run</span>
                         <span *ngIf="smartRunning" class="loading-text"><span class="spinner"></span> Self-healing...</span>
+                    </button>
+                    <button *ngIf="scenario.langgraph_thread_id" class="btn-resume" (click)="resumeScenario()" [disabled]="running || smartRunning || resuming">
+                        <span *ngIf="!resuming">↩ Resume</span>
+                        <span *ngIf="resuming" class="loading-text"><span class="spinner"></span> Resuming...</span>
                     </button>
                     <button class="btn-secondary" (click)="replan()" [disabled]="analyzing">Replan</button>
                     <button class="btn-ghost" (click)="resetToInput()">New Scenario</button>
@@ -128,8 +132,12 @@
                 </div>
                 <div class="plan-actions">
                     <button class="btn-secondary" (click)="activeView = 'plan'">Back to Plan</button>
-                    <button class="btn-primary" (click)="runScenario()" [disabled]="running || smartRunning">Re-run</button>
-                    <button class="btn-smart" (click)="runGraphScenario()" [disabled]="running || smartRunning">⚡ Smart Re-run</button>
+                    <button class="btn-primary" (click)="runScenario()" [disabled]="running || smartRunning || resuming">Re-run</button>
+                    <button class="btn-smart" (click)="runGraphScenario()" [disabled]="running || smartRunning || resuming">⚡ Smart Re-run</button>
+                    <button *ngIf="scenario?.langgraph_thread_id" class="btn-resume" (click)="resumeScenario()" [disabled]="running || smartRunning || resuming">
+                        <span *ngIf="!resuming">↩ Resume</span>
+                        <span *ngIf="resuming" class="loading-text"><span class="spinner"></span> Resuming...</span>
+                    </button>
                     <button class="btn-ghost" (click)="resetToInput()">New Scenario</button>
                 </div>
                 <div *ngIf="lastRunEngine === 'langgraph'" class="engine-badge">⚡ LangGraph self-healing engine</div>

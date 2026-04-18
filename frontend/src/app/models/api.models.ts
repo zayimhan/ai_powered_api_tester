@@ -76,6 +76,7 @@ export interface Scenario {
   natural_language_command: string;
   generated_plan?: any;
   status: "pending" | "planned" | "running" | "passed" | "failed";
+  langgraph_thread_id?: string;
   created_at?: string;
   updated_at?: string;
 }

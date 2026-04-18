@@ -18,6 +18,7 @@ router.delete('/:id', ctrl.remove);
 router.get('/:id/steps', ctrl.getSteps);
 router.post('/:id/run', ctrl.run);
 router.post('/:id/run-graph', ctrl.runGraph);
+router.post('/:id/resume-graph', ctrl.resumeGraph);
 router.post('/:id/replan', ctrl.replan);
 
 module.exports = router;

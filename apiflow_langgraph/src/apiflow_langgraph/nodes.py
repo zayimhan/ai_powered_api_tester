@@ -273,6 +273,14 @@ def evaluator_node(state: ScenarioState) -> Dict[str, Any]:
     new_vars = _extract_variables(result, step, context)
     merged_context = {**context, **new_vars}
 
+    # Read prepared request details for request/response panel
+    prepared_req: Dict[str, Any] = {}
+    try:
+        prepared_json = state.get("_prepared_request_json") or "{}"
+        prepared_req = json.loads(prepared_json)
+    except Exception:
+        pass
+
     step_result_entry = {
         "step_index": idx,
         "step_order": step.get("order", idx + 1),
@@ -287,6 +295,14 @@ def evaluator_node(state: ScenarioState) -> Dict[str, Any]:
         "evaluator_feedback": None,
         "heal_attempts": state.get("heal_attempts", 0),
         "error_message": result.get("error_message"),
+        # Request details (for request/response detail panel)
+        "request_method": prepared_req.get("method"),
+        "request_url": prepared_req.get("url"),
+        "request_headers": prepared_req.get("headers"),
+        "request_body": prepared_req.get("body"),
+        # Response details
+        "response_body": result.get("response_body"),
+        "response_headers": result.get("response_headers"),
     }
 
     if det_passed:

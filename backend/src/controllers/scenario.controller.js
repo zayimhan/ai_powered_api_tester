@@ -164,4 +164,20 @@ async function runGraph(req, res) {
     }
 }
 
-module.exports = { getAll, create, getById, update, remove, getByCollection, getSteps, analyze, run, replan, runGraph };
+async function resumeGraph(req, res) {
+    try {
+        const scenario = scenarioService.getScenarioById(db, req.params.id, req.user.id);
+        if (!scenario) return res.status(404).json({ error: 'Scenario not found' });
+        if (!scenario.langgraph_thread_id) {
+            return res.status(400).json({ error: 'No saved LangGraph session for this scenario. Run it with Smart Run first.' });
+        }
+
+        const result = await langgraphAgentService.resumeWithLangGraph(db, scenario, req.user.id);
+        res.json(result);
+    } catch (err) {
+        console.error('LangGraph resume error:', err);
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAll, create, getById, update, remove, getByCollection, getSteps, analyze, run, replan, runGraph, resumeGraph };

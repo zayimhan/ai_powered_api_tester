@@ -50,6 +50,7 @@ async function runWithLangGraph(db, scenario, steps, userId) {
       scenario_id: scenario.id,
       plan_steps: planSteps,
     }),
+    signal: AbortSignal.timeout(120_000),
   });
 
   if (!resp.ok) {
@@ -102,4 +103,50 @@ async function runWithLangGraph(db, scenario, steps, userId) {
   return data;
 }
 
-module.exports = { runWithLangGraph };
+async function resumeWithLangGraph(db, scenario, userId) {
+  const threadId = scenario.langgraph_thread_id;
+  if (!threadId) throw new Error("No LangGraph thread_id saved for this scenario");
+
+  scenarioService.updateScenario(db, scenario.id, { status: "running" }, userId);
+
+  const resp = await fetch(`${LANGGRAPH_BASE_URL}/resume/${encodeURIComponent(threadId)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(120_000),
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`LangGraph resume failed (${resp.status}): ${errText}`);
+  }
+
+  const data = await resp.json();
+
+  // Write updated step results back to DB
+  const steps = scenarioService.getStepsByScenario(db, scenario.id, userId);
+  for (let i = 0; i < steps.length; i++) {
+    const stepResult = (data.step_results || [])[i];
+    if (!stepResult) continue;
+    scenarioService.updateStep(db, steps[i].id, {
+      status: stepResult.passed ? "passed" : "failed",
+      heal_attempts: stepResult.heal_attempts || 0,
+      heal_log: stepResult.evaluator_feedback || null,
+      evaluator_feedback: stepResult.evaluator_feedback || null,
+      result_snapshot: {
+        status_code: stepResult.status_code,
+        response_time_ms: stepResult.response_time_ms,
+        assertions: stepResult.assertions,
+        extracted_variables: stepResult.extracted_variables,
+        used_credentials: stepResult.used_credentials,
+        evaluator_feedback: stepResult.evaluator_feedback,
+        heal_attempts: stepResult.heal_attempts,
+      },
+    });
+  }
+
+  scenarioService.updateScenario(db, scenario.id, { status: data.final_status }, userId);
+
+  return data;
+}
+
+module.exports = { runWithLangGraph, resumeWithLangGraph };

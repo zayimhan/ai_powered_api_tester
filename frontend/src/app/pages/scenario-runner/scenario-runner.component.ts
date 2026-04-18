@@ -33,6 +33,7 @@ export class ScenarioRunnerComponent implements OnInit {
   analyzing = false;
   running = false;
   smartRunning = false;
+  resuming = false;
   lastRunEngine: 'deterministic' | 'langgraph' = 'deterministic';
   activeView: "input" | "plan" | "results" = "input";
 
@@ -143,6 +144,13 @@ export class ScenarioRunnerComponent implements OnInit {
           actor: s.actor,
           evaluator_feedback: s.evaluator_feedback,
           heal_attempts: s.heal_attempts ?? 0,
+          request_method: s.request_method,
+          request_url: s.request_url,
+          request_headers: s.request_headers,
+          request_body: s.request_body,
+          response_body: s.response_body,
+          response_headers: s.response_headers,
+          error: s.error_message,
         }));
 
         this.runResult = {
@@ -166,6 +174,60 @@ export class ScenarioRunnerComponent implements OnInit {
       error: (err) => {
         this.smartRunning = false;
         this.toast.error(err.error?.error || 'Smart Run failed');
+      },
+    });
+  }
+
+  // ─── Resume LangGraph ───
+
+  resumeScenario(): void {
+    if (!this.scenario) return;
+
+    this.resuming = true;
+    this.scenarioService.resumeGraph(this.scenario.id).subscribe({
+      next: (data) => {
+        const steps = (data.step_results || []).map((s: any) => ({
+          step_id: s.step_index ?? 0,
+          step_order: s.step_order ?? s.step_index + 1,
+          status: s.passed ? 'passed' : 'failed',
+          status_code: s.status_code,
+          response_time_ms: s.response_time_ms,
+          assertions: s.assertions,
+          extracted_variables: s.extracted_variables,
+          used_credentials: s.used_credentials,
+          actor: s.actor,
+          evaluator_feedback: s.evaluator_feedback,
+          heal_attempts: s.heal_attempts ?? 0,
+          request_method: s.request_method,
+          request_url: s.request_url,
+          request_headers: s.request_headers,
+          request_body: s.request_body,
+          response_body: s.response_body,
+          response_headers: s.response_headers,
+          error: s.error_message,
+        }));
+
+        this.runResult = {
+          scenario_id: this.scenario!.id,
+          status: data.final_status === 'passed' ? 'passed' : 'failed',
+          steps,
+        };
+        this.lastRunEngine = 'langgraph';
+        this.activeView = 'results';
+        this.resuming = false;
+        this.loadScenarios();
+
+        const passed = steps.filter((s: any) => s.status === 'passed').length;
+        const total = steps.length;
+        if (data.final_status === 'passed') {
+          this.toast.success(`Resume complete: ${passed}/${total} passed`);
+        } else {
+          this.toast.error(`Resume complete: ${passed}/${total} passed`);
+        }
+      },
+      error: (err) => {
+        this.resuming = false;
+        this.toast.error(err.error?.error || 'Resume failed');
       },
     });
   }

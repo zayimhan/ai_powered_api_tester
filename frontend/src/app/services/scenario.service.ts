@@ -67,6 +67,13 @@ export class ScenarioService {
     );
   }
 
+  resumeGraph(scenarioId: number): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/${scenarioId}/resume-graph`,
+      {},
+    );
+  }
+
   replan(scenarioId: number): Observable<AnalyzeResponse> {
     return this.http.post<AnalyzeResponse>(
       `${this.baseUrl}/${scenarioId}/replan`,
