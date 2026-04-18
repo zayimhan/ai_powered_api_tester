@@ -21,14 +21,19 @@ _graph = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _graph
-    db_path = os.environ.get("CHECKPOINT_DB_PATH") or "langgraph_checkpoints.db"
-    os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
     builder = build_graph_builder()
+    db_path = os.environ.get("CHECKPOINT_DB_PATH") or ""
 
-    async with AsyncSqliteSaver.from_conn_string(db_path) as checkpointer:
+    if db_path:
+        os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
+        async with AsyncSqliteSaver.from_conn_string(db_path) as checkpointer:
+            _graph = builder.compile(checkpointer=checkpointer)
+            yield
+    else:
+        # MemorySaver — no SQLite needed (Railway deployment)
+        checkpointer = MemorySaver()
         _graph = builder.compile(checkpointer=checkpointer)
         yield
-    # cleanup on shutdown
 
 
 app = FastAPI(title="APIFlow LangGraph Service", lifespan=lifespan)
