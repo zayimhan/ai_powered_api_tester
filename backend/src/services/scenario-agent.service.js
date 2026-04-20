@@ -246,9 +246,8 @@ async function executeScenarioPlan(db, scenario, steps, userId) {
             const originalValue = String(originalInputsBody[key] ?? "");
             const resolvedValue = String(value);
             // Accept the override only if the original had a template var that got replaced
-            const hadTemplate = originalValue.includes("{{") && originalValue.includes("}}");
-            const wasResolved = hadTemplate && !resolvedValue.includes("{{");
-            if (wasResolved) {
+            const isResolved = !resolvedValue.includes("{{");
+            if (isResolved) {
               resolvedFields[key] = value;
             }
           }

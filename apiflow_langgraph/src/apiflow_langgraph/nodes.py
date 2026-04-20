@@ -55,7 +55,7 @@ def _make_evaluator_llm():
         model="gpt-4o-mini",
         temperature=0,
         api_key=os.environ.get("OPENAI_API_KEY"),
-    ).with_structured_output(StepEvaluation)
+    ).with_structured_output(StepEvaluation, method="function_calling")
 
 
 def _make_healer_llm():
@@ -63,7 +63,7 @@ def _make_healer_llm():
         model="gpt-4o-mini",
         temperature=0,
         api_key=os.environ.get("OPENAI_API_KEY"),
-    ).with_structured_output(HealProposal)
+    ).with_structured_output(HealProposal, method="function_calling")
 
 
 # Lazy singletons — initialized once on first use
@@ -138,13 +138,19 @@ def prepare_step(state: ScenarioState) -> Dict[str, Any]:
             for key, value in override["body"].items():
                 original_value = str(original_body.get(key, ""))
                 resolved_value = str(value)
-                had_template = "{{" in original_value and "}}" in original_value
-                was_resolved = had_template and "{{" not in resolved_value
-                if was_resolved:
+                # Simplified logic: If the value is not an unresolved template, accept it.
+                if "{{" not in str(value):
                     resolved_fields[key] = value
             if resolved_fields:
                 try:
-                    existing = json.loads(resolved_config["body"]) if resolved_config.get("body") else {}
+                    # Robust parsing: handle both string and dict bodies
+                    existing = resolved_config.get("body") or {}
+                    if isinstance(existing, str):
+                        try:
+                            existing = json.loads(existing)
+                        except:
+                            existing = {}
+                    
                     resolved_config["body"] = json.dumps({**existing, **resolved_fields})
                 except Exception:
                     resolved_config["body"] = json.dumps(resolved_fields)
@@ -220,6 +226,11 @@ def prepare_step(state: ScenarioState) -> Dict[str, Any]:
         resolved_config.get("method", "GET"),
         resolved_config.get("url", ""),
     )
+
+    # Debug: Show exactly what is being sent
+    _log(f"      >>> FINAL METHOD: {resolved_config.get('method')}")
+    _log(f"      >>> FINAL URL: {resolved_config.get('url')}")
+    _log(f"      >>> FINAL BODY: {resolved_config.get('body')[:500] if resolved_config.get('body') else 'None'}")
 
     return {
         "messages": [AIMessage(content=f"Preparing step {idx + 1}: {step.get('description', '')}")],
@@ -332,7 +343,7 @@ def evaluator_node(state: ScenarioState) -> Dict[str, Any]:
     )
 
     heal_attempts = state.get("heal_attempts", 0)
-    if heal_attempts >= 2:
+    if heal_attempts >= 3:
         _log_evaluator("Max heal attempts reached — marking as failed.")
         step_result_entry["passed"] = False
         existing = list(state.get("step_results") or [])
@@ -381,6 +392,7 @@ def evaluator_node(state: ScenarioState) -> Dict[str, Any]:
                 "messages": [AIMessage(content=f"Evaluator: {eval_result.feedback} — healing")],
             }
         else:
+            _log(f"   🤖 **Evaluator:** Decision -> NO HEAL ({eval_result.feedback})")
             existing.append(step_result_entry)
             return {
                 "last_step_passed": False,
@@ -426,12 +438,17 @@ def healer_node(state: ScenarioState) -> Dict[str, Any]:
             HumanMessage(content=prompt),
         ])
     except Exception as exc:
+        _log(f"   ⚠️  Healer Error: {exc}")
         return {
             "heal_attempts": state.get("heal_attempts", 0) + 1,
             "messages": [AIMessage(content=f"Healer error: {exc}")],
         }
 
     _log_healer(proposal.explanation, state.get("heal_attempts", 0) + 1)
+    
+    # Debug: Show proposal fields in terminal
+    if proposal.new_body_fields:
+        _log(f"      🔧 New fields: {json.dumps(proposal.new_body_fields)}")
 
     # Mutate only this step's inputs — never touch other steps
     plan_steps = list(state["plan_steps"])
